@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include "mesa.h"
 #include "bola.h"
+#include <string>
 
 Mesa mesa;
 Bola bola[16];
@@ -50,12 +51,19 @@ void init(void)
 
    glClearColor (0.0, 0.0, 0.0, 1.0);
    glShadeModel (GL_SMOOTH);
-
+/*
    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
    glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
    glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-
+*/
+   for(int i = 1;i<=16;i++){
+	   std::string nombre = "Texturas/Ball" + std::to_string(i) + ".tga";
+	   char *cstr = new char[nombre.length() + 1];
+	   strcpy(cstr, nombre.c_str());
+	   bola[i-1].loadTextures(cstr);
+	   delete [] cstr;
+   }
    glEnable(GL_LIGHTING);
    glEnable(GL_LIGHT0);
    glEnable(GL_DEPTH_TEST);
@@ -88,26 +96,6 @@ void dibujaBolas(){
     for(int i = 0;i<5;i++){
         z = (1*i)*.3075;
         for(int j = 0;j<=i;j++){
-        makeStripeImage();
-            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-        glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-               glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-               glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            #ifdef GL_VERSION_1_1
-               glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, stripeImageWidth, 0,
-                            GL_RGBA, GL_UNSIGNED_BYTE, stripeImage);
-            #else
-               glTexImage1D(GL_TEXTURE_1D, 0, 4, stripeImageWidth, 0,
-                            GL_RGBA, GL_UNSIGNED_BYTE, stripeImage);
-            #endif
-
-            glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-                   currentCoeff = xequalzero;
-                   currentGenMode = GL_OBJECT_LINEAR;
-                   currentPlane = GL_OBJECT_PLANE;
-                   glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, currentGenMode);
-                   glTexGenfv(GL_S, currentPlane, currentCoeff);
             bola[num++].dibujar(x,y,z);
             z-=.615;
         }

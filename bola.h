@@ -8,37 +8,18 @@
 
 #include <GL/glut.h>
 #include <stdlib.h>
-
+#include <string>
+#include "glm.h"
+#include "Texture.h"
+#include <stdio.h>
 class Bola{
-    public:
+	private:
+		GLuint	texturas;
+		Texture BallTexture;
+	public:
+		GLMmodel* pmodel2 = NULL;
         Bola();
-        void dibujar(double x,double y, double z);//Dibuja la mesa
+        void dibujar(double x,double y, double z);//Dibuja la bola
+		bool loadTextures(char * nombrem);
+		
 };
-Bola::Bola(){
-    
-}
-
-
-void Bola::dibujar(double x,double y, double z){
-
-    glPushMatrix(); 
-        GLfloat matB[] = { 255.0/255.0, 255.0/255.0, 255.0/255.0, 1.0f };
-        GLfloat matC[] = { 100.0/255.0, 54.0/255.0, 2.0/255.0, 1.0f };
-        GLfloat mat_shininess[] = { 0.0f };
-
-        glMaterialfv(GL_FRONT, GL_AMBIENT, matB);
-        glMaterialfv(GL_FRONT, GL_DIFFUSE, matB);
-        glMaterialfv(GL_FRONT, GL_SPECULAR, matB);
-        glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);//color
-
-        glTranslatef ( x, y, z);//traslada la extremidad
-        
-        glPushMatrix(); 
-            glScalef ( .3075, .3075, .3075);//Escala la extremidad
-            glutSolidSphere (1.0,20,20);//Dibuja
-        glPopMatrix();
-
-    glPopMatrix();
-}
-
-
