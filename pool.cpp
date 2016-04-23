@@ -44,6 +44,7 @@ static GLint currentGenMode;
 //inicializa la iluminacion
 void init(void) 
 {
+   //Luz ambiental
    GLfloat mat_specular[] = { 0.6, 0.6, 0.6, 1.0 };
    GLfloat mat_ambient[] = {1.0,1.0,1.0,1.0};
    GLfloat mat_shininess[] = { 0.0 };
@@ -51,12 +52,13 @@ void init(void)
 
    glClearColor (0.0, 0.0, 0.0, 1.0);
    glShadeModel (GL_SMOOTH);
-/*
+
    glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
    glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
    glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-*/
+
+   //Carga las texturas a las 16 bolas
    for(int i = 1;i<=16;i++){
 	   std::string nombre = "Texturas/Ball" + std::to_string(i) + ".tga";
 	   char *cstr = new char[nombre.length() + 1];
@@ -64,6 +66,22 @@ void init(void)
 	   bola[i-1].loadTextures(cstr);
 	   delete [] cstr;
    }
+   double x = -4;
+   double z = 0;
+   int num = 0;
+   //inicializa las bolas en su posicion correspondiente
+   for(int i = 0;i<5;i++){
+        z = (1*i)*.3075;
+        for(int j = 0;j<=i;j++){
+            bola[num].setX(x);
+            bola[num++].setZ(z);
+            z-=.615;
+        }
+        x-=.615;
+   }
+   //pone la bola blanca en su lugar
+   bola[15].setX(5);
+   bola[15].setZ(0);
    glEnable(GL_LIGHTING);
    glEnable(GL_LIGHT0);
    glEnable(GL_DEPTH_TEST);
@@ -89,17 +107,12 @@ void init(void)
 }
 
 void dibujaBolas(){
+	//Dibuja las bolas
     double x = -4;
-    double y = -6;
     double z = 0;
     int num = 0;
-    for(int i = 0;i<5;i++){
-        z = (1*i)*.3075;
-        for(int j = 0;j<=i;j++){
-            bola[num++].dibujar(x,y,z);
-            z-=.615;
-        }
-        x-=.615;
+    for(int i = 0;i<16;i++){
+    	bola[i].dibujar();
     }
 }
 
@@ -109,11 +122,12 @@ void display(void)
     glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glPushMatrix();
-        
+		//Dibuja mesa
         mesa.dibujar(0,-7,0);
-        bola[15].dibujar(5,-6,0);
+		//dibuja bola blanca
+        bola[15].dibujar();
+        //dibuja bolas
         dibujaBolas();
-
 
     glPopMatrix();
     glutSwapBuffers();
@@ -194,6 +208,10 @@ void mouse(int button, int state, int x, int y)
 		else {
 			down = 0;
 		}
+	}
+	if (button == GLUT_RIGHT_BUTTON) {
+		bola[15].setMoveX( .1);
+		bola[15].setMoveZ(-.1);
 	}
 	/*
 	if ( button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN )

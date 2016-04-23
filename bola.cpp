@@ -1,15 +1,53 @@
 #include "bola.h"
 
 Bola::Bola(){
-		    
+	moveX=0;
+	moveZ=0;
 }
 
-void Bola::dibujar(double x,double y, double z){
-	
+double Bola::getX(){
+	return x;
+}
+double Bola::getZ(){
+	return z;
+}
+void Bola::setX(double x){
+	this->x = x;
+}
+void Bola::setZ(double z){
+	this->z = z;
+}
+
+double Bola::getMoveX(){
+	return moveX;
+}
+double Bola::getMoveZ(){
+	return moveX;
+}
+void Bola::setMoveX(double mx){
+	this->moveX = mx;
+}
+void Bola::setMoveZ(double mz){
+	this->moveZ = mz;
+}
+
+void Bola::dibujar(){
+	double r = .3075*2;	
 	glPushMatrix();
-		glTranslatef ( x, y, z);//traslada la extremidad
+		x+=moveX;
+		z+=moveZ;
+		if(x>11-r)
+			moveX = -fabs(moveX);
+		if(x<-11+r)
+			moveX = fabs(moveX);
+		if(z>5.5-r)
+			moveZ = -fabs(moveZ);
+		if(z<-5.5+r)
+			moveZ = fabs(moveZ);
+
+		glTranslatef ( x, -6, z);//traslada la bola
 																			        
-		glScalef ( .3075, .3075, .3075);//Escala la extremidad
+		glScalef ( .3075, .3075, .3075);//Escala la bola
 
 		if (!pmodel2) {
 			pmodel2 = glmReadOBJ("Texturas/sphere.obj");
@@ -18,43 +56,40 @@ void Bola::dibujar(double x,double y, double z){
 			glmFacetNormals(pmodel2);
 			glmVertexNormals(pmodel2, 90.0);
 		}
-		// before you draw anything you should bind the right texture
-		// If you have more then one texture you will have to make sure you bind the right one
-		//glBindTexture(GL_TEXTURE_2D, treeTexture.texID);
+		
 		glBindTexture(GL_TEXTURE_2D, BallTexture.texID);
-		// You can replace this with your drawing code
-		// This calls GLM to draw the loaded model with GLM_TEXTURE on to tell it to also render texture coordinates
-		// without those coordinates OpenGL will have no ideea how to map your texture to the object
+	
 		glmDraw(pmodel2, GLM_SMOOTH | GLM_TEXTURE );
-/*
-		glTranslatef ( x, y, z);//traslada la extremidad
-																			        
-		glPushMatrix(); 
-			glScalef ( .3075, .3075, .3075);//Escala la extremidad
-			glutSolidSphere (1.0,20,20);//Dibuja
-		glPopMatrix();
-*/
-	//
+
+		if(moveX>0)
+			moveX-=.0001;
+		else
+			moveX+=.0001;
+		if(moveZ>0)
+			moveZ-=.0001;
+		else
+			moveZ+=.0001;
+
 	glPopMatrix();
 }
 
 bool Bola::loadTextures(char * nombre)
 {
   
-   LoadTGA(&BallTexture, nombre);
-   glGenTextures(1, &BallTexture.texID);
-   //glBindTexture(GL_TEXTURE_2D, treeTexture.texID);
-   glBindTexture(GL_TEXTURE_2D, BallTexture.texID);
-   glTexImage2D(GL_TEXTURE_2D, 0, BallTexture.bpp / 8, BallTexture.width, BallTexture.height, 0, BallTexture.type, GL_UNSIGNED_BYTE, BallTexture.imageData);
-   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+   if(LoadTGA(&BallTexture, nombre)){
+  	  glGenTextures(1, &BallTexture.texID);
+	  glBindTexture(GL_TEXTURE_2D, BallTexture.texID);
+  	  glTexImage2D(GL_TEXTURE_2D, 0, BallTexture.bpp / 8, BallTexture.width, BallTexture.height, 0, BallTexture.type, GL_UNSIGNED_BYTE, BallTexture.imageData);
+   	  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+   	  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+   	  glEnable(GL_TEXTURE_2D);
 
-   if (BallTexture.imageData)		
-  	 free(BallTexture.imageData);
-
- 
-   // Habilita todas las texturas.
-   glEnable(GL_TEXTURE_2D);
+   	  if (BallTexture.imageData)		
+  	 	free(BallTexture.imageData);
+	  return true;	  
+   }else{
+	  return false;
+   }
 
 }
 
