@@ -19,19 +19,20 @@ class Bola{
 		GLuint	texturas;
 		Texture BallTexture;
 		double x,z;
-		double moveX;
-		double moveZ;
+		double velX;
+		double velZ;
 	public:
 		GLMmodel* pmodel2 = NULL;
         Bola();
+		bool colision[16];
         void dibujar();//Dibuja la bola
 		bool loadTextures(char * nombre);
 		double getX();
 		double getZ();
 		void setX(double x);	
 		void setZ(double z);	
-		double getMoveX();
-		double getMoveZ();
-		void setMoveX(double mx);	
-		void setMoveZ(double mz);	
+		double getVelX();
+		double getVelZ();
+		void setVelX(double mx);	
+		void setVelZ(double mz);	
 };

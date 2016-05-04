@@ -11,39 +11,15 @@
 #include "mesa.h"
 #include "bola.h"
 #include <string>
+#include <time.h>
 
 Mesa mesa;
 Bola bola[16];
 
-#define	stripeImageWidth 32
-GLubyte stripeImage[4*stripeImageWidth];
-
-#ifdef GL_VERSION_1_1
-static GLuint texName;
-#endif
-
-void makeStripeImage(void)
-{
-   int j;
-
-   for (j = 0; j < stripeImageWidth; j++) {
-      stripeImage[4*j] = (GLubyte) ((j<=4) ? 255 : 0);
-      stripeImage[4*j+1] = (GLubyte) ((j>4) ? 255 : 0);
-      stripeImage[4*j+2] = (GLubyte) 0;
-      stripeImage[4*j+3] = (GLubyte) 255;
-   }
-}
-
-/*  planes for texture coordinate generation  */
-static GLfloat xequalzero[] = {1.0, 0.0, 0.0, 0.0};
-static GLfloat slanted[] = {1.0, 1.0, 1.0, 0.0};
-static GLfloat *currentCoeff;
-static GLenum currentPlane;
-static GLint currentGenMode;
-
 //inicializa la iluminacion
 void init(void) 
 {
+	srand(time(NULL));
    //Luz ambiental
    GLfloat mat_specular[] = { 0.6, 0.6, 0.6, 1.0 };
    GLfloat mat_ambient[] = {1.0,1.0,1.0,1.0};
@@ -82,28 +58,38 @@ void init(void)
    //pone la bola blanca en su lugar
    bola[15].setX(5);
    bola[15].setZ(0);
+
+
    glEnable(GL_LIGHTING);
    glEnable(GL_LIGHT0);
    glEnable(GL_DEPTH_TEST);
 
+}
 
+double distancia(Bola bola1,Bola bola2){
+	double disX = fabs(bola1.getX() - bola2.getX());
+	double disZ = fabs(bola1.getZ() - bola2.getZ());
+	return sqrt(pow(disX,2)+pow(disZ,2));
+}
 
-   /* #ifdef GL_VERSION_1_1
-       glGenTextures(1, &texName);
-       glBindTexture(GL_TEXTURE_1D, texName);
-    #endif*/
-
-
-
-
-       glEnable(GL_TEXTURE_GEN_S);
-          glEnable(GL_TEXTURE_1D);
-          glEnable(GL_CULL_FACE);
-             glEnable(GL_AUTO_NORMAL);
-             glEnable(GL_NORMALIZE);
-             //glFrontFace(GL_CW);
-             //glCullFace(GL_BACK);
-             //glMaterialf (GL_FRONT, GL_SHININESS, 64.0);
+void checaColision(){
+	for(int i = 0;i<15;i++){
+		for(int j = i+1;j<16;j++){
+			if(distancia(bola[i],bola[j]) <= .615){
+				if(!bola[i].colision[j]){
+					bola[i].setVelX(bola[i].getVelX()*-1);
+					bola[i].setVelZ(bola[i].getVelZ()*-1);
+					bola[j].setVelX(bola[j].getVelX()*-1);
+					bola[j].setVelZ(bola[j].getVelZ()*-1);
+					bola[i].colision[j]=true;
+					bola[j].colision[i]=true;
+				}
+			}else{
+				bola[i].colision[j]=false;
+				bola[j].colision[i]=false;
+			}
+		}
+	}
 }
 
 void dibujaBolas(){
@@ -122,14 +108,15 @@ void display(void)
     glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glPushMatrix();
+		//Checa si bolas colisionan
+		checaColision();
 		//Dibuja mesa
         mesa.dibujar(0,-7,0);
 		//dibuja bola blanca
         bola[15].dibujar();
         //dibuja bolas
         dibujaBolas();
-
-    glPopMatrix();
+	glPopMatrix();
     glutSwapBuffers();
 }
 
@@ -143,7 +130,7 @@ void reshape (int w, int h)
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
    glTranslatef (0.0, 0.0, -25.0);
-   glRotatef (-35.0, 0.0, 1.0, 0.0);
+   glRotatef (-35.0, -1.0, 1.0, 0.0);
    //glRotatef (90.0, 1.0, 0.0, 0.0);
 }
 
@@ -200,6 +187,7 @@ void motion(int x, int y)
 //Iteracción con el mouse
 void mouse(int button, int state, int x, int y)
 {
+
 	if (button == GLUT_LEFT_BUTTON) {
 		if (state == GLUT_DOWN) {
 			lastx = x;
@@ -210,8 +198,10 @@ void mouse(int button, int state, int x, int y)
 		}
 	}
 	if (button == GLUT_RIGHT_BUTTON) {
-		bola[15].setMoveX( .1);
-		bola[15].setMoveZ(-.1);
+		for(int i = 0;i<16;i++){
+			bola[i].setVelX((double)rand()/(double)(RAND_MAX)*.2);
+			bola[i].setVelZ((double)rand()/(double)(RAND_MAX)*.2);
+		}
 	}
 	/*
 	if ( button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN )
@@ -268,10 +258,10 @@ void keyboard (unsigned char key, int x, int y)
          currentCoeff = xequalzero;
          glTexGenfv(GL_S, currentPlane, currentCoeff);
          glutPostRedisplay();
-         break;
+         break*/;
       case 27:
          exit(0);
-         break;*/
+         break;
       default:
          break;
    }

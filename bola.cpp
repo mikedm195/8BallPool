@@ -1,8 +1,11 @@
 #include "bola.h"
 
 Bola::Bola(){
-	moveX=0;
-	moveZ=0;
+	velX=0;
+	velZ=0;
+	int i = 0;
+	for(;i<16;i++)
+		colision[i]=false;
 }
 
 double Bola::getX(){
@@ -18,32 +21,32 @@ void Bola::setZ(double z){
 	this->z = z;
 }
 
-double Bola::getMoveX(){
-	return moveX;
+double Bola::getVelX(){
+	return velX;
 }
-double Bola::getMoveZ(){
-	return moveX;
+double Bola::getVelZ(){
+	return velZ;
 }
-void Bola::setMoveX(double mx){
-	this->moveX = mx;
+void Bola::setVelX(double mx){
+	this->velX = mx;
 }
-void Bola::setMoveZ(double mz){
-	this->moveZ = mz;
+void Bola::setVelZ(double mz){
+	this->velZ = mz;
 }
 
 void Bola::dibujar(){
 	double r = .3075*2;	
 	glPushMatrix();
-		x+=moveX;
-		z+=moveZ;
+		x+=velX;
+		z+=velZ;
 		if(x>11-r)
-			moveX = -fabs(moveX);
+			velX = -fabs(velX);
 		if(x<-11+r)
-			moveX = fabs(moveX);
+			velX = fabs(velX);
 		if(z>5.5-r)
-			moveZ = -fabs(moveZ);
+			velZ = -fabs(velZ);
 		if(z<-5.5+r)
-			moveZ = fabs(moveZ);
+			velZ = fabs(velZ);
 
 		glTranslatef ( x, -6, z);//traslada la bola
 																			        
@@ -61,14 +64,14 @@ void Bola::dibujar(){
 	
 		glmDraw(pmodel2, GLM_SMOOTH | GLM_TEXTURE );
 
-		if(moveX>0)
-			moveX-=.0001;
+		if(velX>0)
+			velX-=.0001;
 		else
-			moveX+=.0001;
-		if(moveZ>0)
-			moveZ-=.0001;
+			velX+=.0001;
+		if(velZ>0)
+			velZ-=.0001;
 		else
-			moveZ+=.0001;
+			velZ+=.0001;
 
 	glPopMatrix();
 }
