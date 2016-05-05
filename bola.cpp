@@ -1,8 +1,8 @@
 #include "bola.h"
 
 Bola::Bola(){
-	velX=0;
-	velZ=0;
+	velX=0.0;
+	velZ=0.0;
 	int i = 0;
 	for(;i<16;i++)
 		colision[i]=false;
@@ -39,15 +39,7 @@ void Bola::dibujar(){
 	glPushMatrix();
 		x+=velX;
 		z+=velZ;
-		if(x>11-r)
-			velX = -fabs(velX);
-		if(x<-11+r)
-			velX = fabs(velX);
-		if(z>5.5-r)
-			velZ = -fabs(velZ);
-		if(z<-5.5+r)
-			velZ = fabs(velZ);
-
+		
 		glTranslatef ( x, -6, z);//traslada la bola
 																			        
 		glScalef ( .3075, .3075, .3075);//Escala la bola
@@ -64,15 +56,26 @@ void Bola::dibujar(){
 	
 		glmDraw(pmodel2, GLM_SMOOTH | GLM_TEXTURE );
 
-		if(velX>0)
-			velX-=.0001;
-		else
-			velX+=.0001;
-		if(velZ>0)
-			velZ-=.0001;
-		else
-			velZ+=.0001;
+		if(velX != 0 || velZ != 0){
+			if(fabs(velX)>fabs(velZ)){
+				velZ-=velZ*.00015/fabs(velX);
+				if(velX>0)
+					velX-=.00015;
+				else
+					velX+=.00015;
+			}else{
+				velX-=velX*.00015/fabs(velZ);
+				if(velZ>0)
+					velZ-=.00015;
+				else
+					velZ+=.00015;
+			}
+			if(fabs(velX)<.00015)
+				velX=0;
+			if(fabs(velZ)<.00015)
+				velZ=0;
 
+		}
 	glPopMatrix();
 }
 

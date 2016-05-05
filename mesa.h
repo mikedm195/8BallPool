@@ -83,7 +83,7 @@ void Mesa::dibujar(double x,double y, double z){
     	    glutSolidCube (1.0);//Dibuja
         glPopMatrix();
         glPushMatrix(); 
-            glTranslatef ( 12.8075, 0, 0);//traslada la extremidad
+            glTranslatef ( 12.3, 0, 0);//traslada la extremidad
 	        glScalef ( 1.5, 2.0, 16);//Escala la extremidad
     	    glutSolidCube (1.0);//Dibuja
         glPopMatrix();
@@ -94,31 +94,28 @@ void Mesa::dibujar(double x,double y, double z){
     	    glutSolidCube (1.0);//Dibuja
         glPopMatrix();
         glPushMatrix(); 
-            glTranslatef ( -12.8075, 0, 0);//traslada la extremidad
+            glTranslatef ( -12.3, 0, 0);//traslada la extremidad
 	        glScalef ( 1.5, 2.0, 16);//Escala la extremidad
     	    glutSolidCube (1.0);//Dibuja
         glPopMatrix();
-/*
-        glPushMatrix(); 
-            glTranslatef ( -11.8075, 0, 0);//traslada la extremidad
-            glScalef ( 2, 2.0, 9);//Escala la extremidad
-            glutSolidCube (1.0);//Dibuja
-        glPopMatrix();
-*/	
+
 		setColor(0,0,0);
-		glPushMatrix(); 
-            glTranslatef ( -11, 0, 5.5);//traslada la extremidad
-            glutSolidSphere (0.615,20,20);//Dibuja
-			glTranslatef ( 11, 0, 0);//traslada la extremidad
-            glutSolidSphere (0.615,20,20);//Dibuja
-			glTranslatef ( 11, 0, 0);//traslada la extremidad
-            glutSolidSphere (0.615,20,20);//Dibuja
-			glTranslatef ( 0, 0, -11);//traslada la extremidad
-            glutSolidSphere (0.615,20,20);//Dibuja
-			glTranslatef ( -11, 0, 0);//traslada la extremidad
-            glutSolidSphere (0.615,20,20);//Dibuja
-			glTranslatef ( -11, 0, 0);//traslada la extremidad
-            glutSolidSphere (0.615,20,20);//Dibuja
+		
+        glTranslatef ( 0, .5, 0);//traslada la extremidad
+		glScalef(1,.5,1);
+		glPushMatrix(); //mueve y dibuja los hoyos
+            glTranslatef ( -11, 0, 5.5);
+            glutSolidSphere (0.615,20,20);
+			glTranslatef ( 11, 0, 0);
+            glutSolidSphere (0.615,20,20);
+			glTranslatef ( 11, 0, 0);
+            glutSolidSphere (0.615,20,20);
+			glTranslatef ( 0, 0, -11);
+            glutSolidSphere (0.615,20,20);
+			glTranslatef ( -11, 0, 0);
+            glutSolidSphere (0.615,20,20);
+			glTranslatef ( -11, 0, 0);
+            glutSolidSphere (0.615,20,20);
         glPopMatrix();
 
 

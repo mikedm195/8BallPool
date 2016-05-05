@@ -16,6 +16,10 @@
 Mesa mesa;
 Bola bola[16];
 
+int lastx, lasty;
+int down = 0;
+int right = 0;
+
 //inicializa la iluminacion
 void init(void) 
 {
@@ -92,6 +96,19 @@ void checaColision(){
 	}
 }
 
+void colisionPared(int x){
+	double d = .615;
+	double r = .7075;
+	if(bola[x].getX()>11-d && (bola[x].getZ()<4.5 && bola[x].getZ() > -4.5))
+		bola[x].setVelX(-fabs(bola[x].getVelX()));
+	if(bola[x].getX()<-11+d && (bola[x].getZ()<4.5 && bola[x].getZ() > -4.5))
+		bola[x].setVelX(fabs(bola[x].getVelX()));
+	if(bola[x].getZ()>5.5-d && ((bola[x].getX() < 11-r && bola[x].getX() > 1+r) || (bola[x].getX() > -11+r && bola[x].getX() < -1-r)))
+		bola[x].setVelZ(-fabs(bola[x].getVelZ()));
+	if(bola[x].getZ()<-5.5+d && ((bola[x].getX() < 11-r && bola[x].getX() > 1+r) || (bola[x].getX() > -11+r && bola[x].getX() < -1-r)))
+		bola[x].setVelZ(fabs(bola[x].getVelZ()));
+
+}
 void dibujaBolas(){
 	//Dibuja las bolas
     double x = -4;
@@ -99,7 +116,18 @@ void dibujaBolas(){
     int num = 0;
     for(int i = 0;i<16;i++){
     	bola[i].dibujar();
+		colisionPared(i);
     }
+}
+
+void dibujaTaco(){
+	glPushMatrix();
+		glTranslatef (bola[15].getX(),-6,bola[15].getZ()+5);
+		glScalef (.2,.2,4);
+		glRotatef(lastx,1,0,1);
+		glutSolidSphere(1,20,20);
+	glPopMatrix();
+	glutPostRedisplay();
 }
 
 //Se dibuja todo aqui
@@ -116,6 +144,8 @@ void display(void)
         bola[15].dibujar();
         //dibuja bolas
         dibujaBolas();
+		//dibujaTaco();
+		printf("%f\t%f\n",bola[15].getVelX(),bola[15].getVelZ());
 	glPopMatrix();
     glutSwapBuffers();
 }
@@ -130,7 +160,7 @@ void reshape (int w, int h)
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
    glTranslatef (0.0, 0.0, -25.0);
-   glRotatef (-35.0, -1.0, 1.0, 0.0);
+   glRotatef (-25.0, -1.0, 0.0, 0.0);
    //glRotatef (90.0, 1.0, 0.0, 0.0);
 }
 
@@ -139,15 +169,20 @@ void simulacion()
     glutPostRedisplay();
 }
 
-int lastx, lasty;
-int down = 0;
-int right = 0;
 
 void motion(int x, int y)
 {
 	if (down) {
 		glRotatef(lastx - x, 0, 1, 0);
 		lastx = x;
+		glPushMatrix();
+			glTranslatef (bola[15].getX(),-6,bola[15].getZ()+5);
+			glScalef (.2,.2,4);
+			//glRotatef(lastx,1,0,1);
+			glutSolidSphere(1,20,20);
+		glPopMatrix();
+		glutPostRedisplay();
+
 		glutPostRedisplay();
 	}
 /*
@@ -198,10 +233,15 @@ void mouse(int button, int state, int x, int y)
 		}
 	}
 	if (button == GLUT_RIGHT_BUTTON) {
+		//bola[15].setVelX(.01);
+		//bola[15].setVelZ(.01);
 		for(int i = 0;i<16;i++){
-			bola[i].setVelX((double)rand()/(double)(RAND_MAX)*.2);
-			bola[i].setVelZ((double)rand()/(double)(RAND_MAX)*.2);
+			//bola[i].setVelX(-1*(double)rand()/(double)(RAND_MAX)*.2);
+			//bola[i].setVelZ((double)rand()/(double)(RAND_MAX)*.2);
 		}
+		
+			bola[15].setVelX(.1);
+			bola[15].setVelZ(0);
 	}
 	/*
 	if ( button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN )
@@ -230,7 +270,32 @@ void mouse(int button, int state, int x, int y)
 
 void keyboard (unsigned char key, int x, int y)
 {
-   switch (key) {
+	switch (key) {
+		case 'a':
+		case 'A':
+			bola[15].setX(bola[15].getX()-.1);
+			printf("%f\t%f\n",bola[15].getX(),bola[15].getZ());
+			printf("\t%f\t%f\n",bola[15].getVelX(),bola[15].getVelZ());
+			break;
+		case 'd':
+		case 'D':
+			bola[15].setX(bola[15].getX()+.1);
+			printf("%f\t%f\n",bola[15].getX(),bola[15].getZ());
+			printf("\t%f\t%f\n",bola[15].getVelX(),bola[15].getVelZ());
+			break;
+		case 'w':
+		case 'W':
+			bola[15].setZ(bola[15].getZ()-.1);
+			printf("%f\t%f\n",bola[15].getX(),bola[15].getZ());
+			printf("\t%f\t%f\n",bola[15].getVelX(),bola[15].getVelZ());
+			break;
+		case 's':
+		case 'S':
+			bola[15].setZ(bola[15].getZ()+.1);
+			printf("%f\t%f\n",bola[15].getX(),bola[15].getZ());
+			printf("\t%f\t%f\n",bola[15].getVelX(),bola[15].getVelZ());
+			break;
+
       /*case 'e':
       case 'E':
          currentGenMode = GL_EYE_LINEAR;
