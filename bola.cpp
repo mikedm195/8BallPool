@@ -35,14 +35,15 @@ void Bola::setVelZ(double mz){
 }
 
 void Bola::dibujar(){
-	double r = .3075*2;	
+	double r = .3075;
+	double desAcc = .0008;	
 	glPushMatrix();
 		x+=velX;
 		z+=velZ;
 		
 		glTranslatef ( x, -6, z);//traslada la bola
 																			        
-		glScalef ( .3075, .3075, .3075);//Escala la bola
+		glScalef ( r, r, r);//Escala la bola
 
 		if (!pmodel2) {
 			pmodel2 = glmReadOBJ("Texturas/sphere.obj");
@@ -58,21 +59,21 @@ void Bola::dibujar(){
 
 		if(velX != 0 || velZ != 0){
 			if(fabs(velX)>fabs(velZ)){
-				velZ-=velZ*.00015/fabs(velX);
+				velZ-=velZ*desAcc/fabs(velX);
 				if(velX>0)
-					velX-=.00015;
+					velX-=desAcc;
 				else
-					velX+=.00015;
+					velX+=desAcc;
 			}else{
-				velX-=velX*.00015/fabs(velZ);
+				velX-=velX*desAcc/fabs(velZ);
 				if(velZ>0)
-					velZ-=.00015;
+					velZ-=desAcc;
 				else
-					velZ+=.00015;
+					velZ+=desAcc;
 			}
-			if(fabs(velX)<.00015)
+			if(fabs(velX)<desAcc)
 				velX=0;
-			if(fabs(velZ)<.00015)
+			if(fabs(velZ)<desAcc)
 				velZ=0;
 
 		}

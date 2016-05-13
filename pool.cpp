@@ -8,17 +8,24 @@
  */
 #include <GL/glut.h>
 #include <stdlib.h>
+#include <math.h>
 #include "mesa.h"
 #include "bola.h"
 #include <string>
 #include <time.h>
+#include "text.h"
+
+#define PI 3.14159265
 
 Mesa mesa;
 Bola bola[16];
-
+Bola score[16];
+Text t;
 int lastx, lasty;
 int down = 0;
 int right = 0;
+
+double rot = 0;
 
 //inicializa la iluminacion
 void init(void) 
@@ -29,7 +36,7 @@ void init(void)
    GLfloat mat_ambient[] = {1.0,1.0,1.0,1.0};
    GLfloat mat_shininess[] = { 0.0 };
    GLfloat light_position[] = { 0.0, 5.0, 5.0, 1.0 };
-
+   
    glClearColor (0.0, 0.0, 0.0, 1.0);
    glShadeModel (GL_SMOOTH);
 
@@ -37,19 +44,25 @@ void init(void)
    glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
    glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-
+	
+   t3dInit();
    //Carga las texturas a las 16 bolas
    for(int i = 1;i<=16;i++){
 	   std::string nombre = "Texturas/Ball" + std::to_string(i) + ".tga";
 	   char *cstr = new char[nombre.length() + 1];
 	   strcpy(cstr, nombre.c_str());
 	   bola[i-1].loadTextures(cstr);
+	   score[i-1].loadTextures(cstr);
 	   delete [] cstr;
    }
    double x = -4;
    double z = 0;
    int num = 0;
    //inicializa las bolas en su posicion correspondiente
+   for(int i = 0;i<15;i++){
+		score[i].setX(0);
+		score[i].setZ(0);
+   }
    for(int i = 0;i<5;i++){
         z = (1*i)*.3075;
         for(int j = 0;j<=i;j++){
@@ -120,11 +133,41 @@ void dibujaBolas(){
     }
 }
 
+void dibujaBolaScore(int x,int y,int z,int i){
+	glPushMatrix();
+		glRotatef(-90,0,1,0);
+		glTranslatef(x,y,z);
+		score[i].dibujar();
+	glPopMatrix();
+
+}
+
+void dibujaScore(){
+	//Dibuja las bolas lisas que faltan por meter 
+	dibujaBolaScore(-5,18,5,0);
+	dibujaBolaScore(-5,17,5,1);
+	dibujaBolaScore(-5,16,5,5);
+	dibujaBolaScore(-5,15,5,6);
+	dibujaBolaScore(-5,14,5,8);
+	dibujaBolaScore(-5,13,5,12);
+	dibujaBolaScore(-5,12,5,14);
+
+	//Dibuja las bolas rayadas que faltan por meter 
+	dibujaBolaScore(-5,18,-5,2);
+	dibujaBolaScore(-5,17,-5,3);
+	dibujaBolaScore(-5,16,-5,7);
+	dibujaBolaScore(-5,15,-5,9);
+	dibujaBolaScore(-5,14,-5,10);
+	dibujaBolaScore(-5,13,-5,11);
+	dibujaBolaScore(-5,12,-5,13);
+
+}	
+
 void dibujaTaco(){
 	glPushMatrix();
-		glTranslatef (bola[15].getX(),-6,bola[15].getZ()+5);
+		glTranslatef (bola[15].getX(), 0,bola[15].getZ()-15);
 		glScalef (.2,.2,4);
-		glRotatef(lastx,1,0,1);
+		glRotatef(rot,0,0,1);
 		glutSolidSphere(1,20,20);
 	glPopMatrix();
 	glutPostRedisplay();
@@ -136,6 +179,10 @@ void display(void)
     glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glPushMatrix();
+
+		gluLookAt(0.0, 0.0, 25.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+	    glRotated(rot, 0.0, 1.0, 0.0);
+
 		//Checa si bolas colisionan
 		checaColision();
 		//Dibuja mesa
@@ -144,10 +191,19 @@ void display(void)
         bola[15].dibujar();
         //dibuja bolas
         dibujaBolas();
-		//dibujaTaco();
-		printf("%f\t%f\n",bola[15].getVelX(),bola[15].getVelZ());
+		//printf("%f\n",rot);
+		//////////////7printf("%f\t%f\n",bola[15].getVelX(),bola[15].getVelZ());
+ 
 	glPopMatrix();
-    glutSwapBuffers();
+	
+	dibujaScore();
+	//dibujaTaco();
+	
+
+
+	t.drawText();
+ 	
+	glutSwapBuffers();
 }
 
 void reshape (int w, int h)
@@ -159,7 +215,7 @@ void reshape (int w, int h)
    
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
-   glTranslatef (0.0, 0.0, -25.0);
+   glTranslatef (0.0, -10.0, -10.0);
    glRotatef (-25.0, -1.0, 0.0, 0.0);
    //glRotatef (90.0, 1.0, 0.0, 0.0);
 }
@@ -170,54 +226,6 @@ void simulacion()
 }
 
 
-void motion(int x, int y)
-{
-	if (down) {
-		glRotatef(lastx - x, 0, 1, 0);
-		lastx = x;
-		glPushMatrix();
-			glTranslatef (bola[15].getX(),-6,bola[15].getZ()+5);
-			glScalef (.2,.2,4);
-			//glRotatef(lastx,1,0,1);
-			glutSolidSphere(1,20,20);
-		glPopMatrix();
-		glutPostRedisplay();
-
-		glutPostRedisplay();
-	}
-/*
-	if ( right)
-        {
-          _angulo += ( x - _startx ) / 2.0f;
-
-          if ( _fz > 1.0 && _fz < 54.0  )
-            _fz += ( (y - _starty) * 0.1 );
-          else if ( _fz <= 1.0  )
-            _fz = 1.1f;
-          else if ( _fz >= 54.0  )
-            _fz = 53.9f;
-
-          if ( _fx > 7.0 && _fx < 60.0  )
-            _fx += ( (y - _starty) * 0.1 );
-          else if ( _fx <= 7.0  )
-            _fx = 7.1f;
-          else if ( _fx >= 60.0  )
-            _fx = 59.9f;
-
-          _startx = x;
-          _starty = y;
-          glutPostRedisplay();
-        }
-
-        if ( _mover )
-        {
-          _moverX -= ( (x - _startx) * 0.05 );
-
-          _startx = x;
-          _starty = y;
-          glutPostRedisplay();
-        }*/
-}
 
 //Iteracción con el mouse
 void mouse(int button, int state, int x, int y)
@@ -236,94 +244,51 @@ void mouse(int button, int state, int x, int y)
 		//bola[15].setVelX(.01);
 		//bola[15].setVelZ(.01);
 		for(int i = 0;i<16;i++){
-			//bola[i].setVelX(-1*(double)rand()/(double)(RAND_MAX)*.2);
-			//bola[i].setVelZ((double)rand()/(double)(RAND_MAX)*.2);
+			bola[i].setVelX(-1*(double)rand()/(double)(RAND_MAX)*.2);
+			bola[i].setVelZ((double)rand()/(double)(RAND_MAX)*.2);
 		}
-		
-			bola[15].setVelX(.1);
-			bola[15].setVelZ(0);
+		if(t.getTurn()==1)
+			t.setTurn(2);	
+		else
+			t.setTurn(1);	
+			bola[15].setVelX(sin(rot*PI/180)*.21);
+			bola[15].setVelZ(-cos(rot*PI/180)*.21);
+			//bola[15].setVelZ(-sin(rot)*.1);
 	}
-	/*
-	if ( button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN )
-        {
-          right = 1;
-          lastx = x;
-          lasty = y;
-        }
-        if ( button == GLUT_RIGHT_BUTTON && state == GLUT_UP )
-        {
-          right = 0;
-        }
-
-        if ( button == GLUT_MIDDLE_BUTTON && state == GLUT_DOWN )
-        {
-          down = 1;
-          lastx = x;
-          lasty = y;
-
-        }
-        if ( button == GLUT_MIDDLE_BUTTON && state == GLUT_UP )
-        {
-          down = 0;
-        }*/
 }
-
+void mouse_move(int x, int y) {
+    if(down) {
+		rot += (x - lastx)*0.3;
+		lastx = x;
+	}
+}
 void keyboard (unsigned char key, int x, int y)
 {
 	switch (key) {
 		case 'a':
 		case 'A':
-			bola[15].setX(bola[15].getX()-.1);
+			score[15].setX(score[15].getX()-.1);
 			printf("%f\t%f\n",bola[15].getX(),bola[15].getZ());
 			printf("\t%f\t%f\n",bola[15].getVelX(),bola[15].getVelZ());
 			break;
 		case 'd':
 		case 'D':
-			bola[15].setX(bola[15].getX()+.1);
+			score[15].setX(score[15].getX()+.1);
 			printf("%f\t%f\n",bola[15].getX(),bola[15].getZ());
 			printf("\t%f\t%f\n",bola[15].getVelX(),bola[15].getVelZ());
 			break;
 		case 'w':
 		case 'W':
-			bola[15].setZ(bola[15].getZ()-.1);
+			score[15].setZ(score[15].getZ()-.1);
 			printf("%f\t%f\n",bola[15].getX(),bola[15].getZ());
 			printf("\t%f\t%f\n",bola[15].getVelX(),bola[15].getVelZ());
 			break;
 		case 's':
 		case 'S':
-			bola[15].setZ(bola[15].getZ()+.1);
+			score[15].setZ(score[15].getZ()+.1);
 			printf("%f\t%f\n",bola[15].getX(),bola[15].getZ());
 			printf("\t%f\t%f\n",bola[15].getVelX(),bola[15].getVelZ());
 			break;
-
-      /*case 'e':
-      case 'E':
-         currentGenMode = GL_EYE_LINEAR;
-         currentPlane = GL_EYE_PLANE;
-         glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, currentGenMode);
-         glTexGenfv(GL_S, currentPlane, currentCoeff);
-         glutPostRedisplay();
-         break;
-      case 'o':
-      case 'O':
-         currentGenMode = GL_OBJECT_LINEAR;
-         currentPlane = GL_OBJECT_PLANE;
-         glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, currentGenMode);
-         glTexGenfv(GL_S, currentPlane, currentCoeff);
-         glutPostRedisplay();
-         break;
-      case 's':
-      case 'S':
-         currentCoeff = slanted;
-         glTexGenfv(GL_S, currentPlane, currentCoeff);
-         glutPostRedisplay();
-         break;
-      case 'x':
-      case 'X':
-         currentCoeff = xequalzero;
-         glTexGenfv(GL_S, currentPlane, currentCoeff);
-         glutPostRedisplay();
-         break*/;
       case 27:
          exit(0);
          break;
@@ -344,7 +309,7 @@ int main(int argc, char** argv)
    glutReshapeFunc(reshape);
    glutKeyboardFunc(keyboard);
    glutMouseFunc(mouse);
-   glutMotionFunc(motion);
+   glutMotionFunc(mouse_move);
    glutIdleFunc(simulacion);
    glutMainLoop();
    return 0;
