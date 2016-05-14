@@ -27,6 +27,13 @@ int right = 0;
 
 double rot = 0;
 
+typedef struct velocidadesBolas{
+	double velXbol1;
+	double velZbol1;
+	double velXbol2;
+	double velZbol2;
+};
+
 //inicializa la iluminacion
 void init(void) 
 {
@@ -89,15 +96,44 @@ double distancia(Bola bola1,Bola bola2){
 	return sqrt(pow(disX,2)+pow(disZ,2));
 }
 
+velocidadesBolas velocidadColision(Bola bola1, Bola bola2){
+
+	double anguloTheta, anguloPhi;
+	velocidadesBolas resultado;
+
+	anguloTheta = atan(fabs(bola1.getX() - bola2.getX()) / fabs(bola1.getZ() - bola2.getZ()));
+	anguloPhi = atan(fabs(bola1.getZ() - bola2.getZ()) / fabs(bola1.getX() - bola2.getX()));
+
+	double matriz[2][3] = {
+			{cos(anguloTheta), cos(anguloPhi), (bola1.getVelX() + bola2.getVelX())},
+			{sin(anguloTheta), sin(anguloPhi), (bola1.getVelZ() + bola2.getVelX())}
+	};
+
+	double determinanteS = (matriz[0][0] * matriz[1][1]) - (matriz[0][1] * matriz[1][0]);
+	double determinanteX = (matriz[0][2] * matriz[1][1]) - (matriz[1][2] * matriz[0][1]);
+	double determinanteY = (matriz[0][0] * matriz[1][2]) - (matriz[1][0] * matriz[0][2]);
+
+	double x = determinanteX / determinanteS;
+	double y = determinanteY / determinanteS;
+
+	resultado.velXbol1 = x * matriz[0][0];
+	resultado.velZbol1 = x * matriz[1][0];
+	resultado.velXbol2 = y * matriz[0][1];
+	resultado.velZbol2 = y * matriz[1][1];
+
+	return resultado;
+}
+
 void checaColision(){
 	for(int i = 0;i<15;i++){
 		for(int j = i+1;j<16;j++){
 			if(distancia(bola[i],bola[j]) <= .615){
 				if(!bola[i].colision[j]){
-					bola[i].setVelX(bola[i].getVelX()*-1);
-					bola[i].setVelZ(bola[i].getVelZ()*-1);
-					bola[j].setVelX(bola[j].getVelX()*-1);
-					bola[j].setVelZ(bola[j].getVelZ()*-1);
+					velocidadesBolas velocidades = velocidadColision(bola[i], bola[j]);
+					bola[i].setVelX(velocidades.velXbol1);
+					bola[i].setVelZ(velocidades.velZbol1);
+					bola[j].setVelX(velocidades.velXbol2);
+					bola[j].setVelZ(velocidades.velZbol2);
 					bola[i].colision[j]=true;
 					bola[j].colision[i]=true;
 				}
