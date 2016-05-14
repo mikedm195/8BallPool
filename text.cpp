@@ -22,6 +22,10 @@ int Text::getWinner()
 {
     return winner;
 }
+
+void Text::setStrength(int strength){
+	this->strength = strength;
+}
 void Text::drawTurn()
 {
     std::string sturn = "Player " + std::to_string(turn) + " turn";
@@ -48,6 +52,35 @@ void Text::drawWinner()
 
 }
 
+void Text::drawPlayers(){
+    std::string p = "Player 1               \t\ŧ\ŧ\ŧ\ŧ\ŧPlayer 2";
+    
+    //Draw the strings along the sides of a square
+    glPushMatrix();
+	    glRotatef(-25,1,0,0);
+	    glTranslatef(0, 4.5, -0.0f);
+		glScalef(.5,.5,.5);
+	    t3dDraw3D(p, 0, 0, 0.2f);
+    glPopMatrix();
+
+}
+
+
+void Text::drawStrength(){
+	if(strength > 0){
+    	std::string s = "" + std::to_string(strength);
+    
+	    //Draw the strings along the sides of a square
+    	glPushMatrix();
+	    	glRotatef(-25,1,0,0);
+		    glTranslatef(0, 4.5, -0.0f);
+			glScalef(.5,.5,.5);
+		    t3dDraw3D(s, 0, 0, 0.2f);
+	    glPopMatrix();
+
+	}
+}
+
 void Text::drawText()
 {
     //glTranslatef(0.0f, 0.0f, -8.0f);
@@ -61,6 +94,8 @@ void Text::drawText()
     glLightfv(GL_LIGHT0, GL_POSITION, lightPos0);
     
     drawTurn();
+	drawPlayers();
+	drawStrength();
 	if(winner != 0)
 	    drawWinner();
     

@@ -10,8 +10,11 @@ class Text
 	private:
 		int turn;
 		int winner;
+		int strength=0;
 		void drawTurn();
 		void drawWinner();
+		void drawPlayers();
+		void drawStrength();
 
 	public:
 								    
@@ -21,6 +24,6 @@ class Text
 		void setWinner(int w);
 		int getWinner();
 		void drawText();
-																    																    
+		void setStrength(int strength);														    																    
 };
 

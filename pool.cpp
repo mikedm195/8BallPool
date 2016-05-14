@@ -16,18 +16,27 @@
 #include "text.h"
 
 #define PI 3.14159265
-
+#define Max_Fuerza .21
 Mesa mesa;
-Bola bola[16];
-Bola score[16];
-Text t;
+Bola bola[16];//Bolas que estan sobre la mesa
+Bola score[16];//Bolas que indican cuantas faltan por meter
+Text t;//Texto
+
 int lastx, lasty;
 int down = 0;
 int right = 0;
+int turno = 1;//turno de jugador 1 o 2
+int lisas = 10;//si es 1, jugador 1 es liso, si es -1 jugador 2 es liso si es 10 aun no se sabe
+bool lisaIn = false;//Saber si una lisa entro durante la jugada
+bool rayadaIn = false;//Saber si una rayada entro durante la jugada
+bool quietas = true;//Dice si las bolas estan quietas para cambiar de turno
+int status = 0;//Para saber cuando le esta pegando le pego
+double fuerza = 0;//La fuerza con la que le pega
+double tempFuerza = 0;//Aumentar/decrementar la fuerza
 
-bool colisiones[16][16];
-
-double rot = 0;
+bool colisiones[16][16];//Saber si una bola esta colisionando con otra
+bool ballIn[16];//Indica cuando la bola ya entro en un hoyo
+double rot = 0;//Rotacion de la camara
 
 typedef struct velocidadesBolas{
 	double velXbol1;
@@ -36,25 +45,7 @@ typedef struct velocidadesBolas{
 	double velZbol2;
 };
 
-//inicializa la iluminacion
-void init(void) 
-{
-	srand(time(NULL));
-   //Luz ambiental
-   GLfloat mat_specular[] = { 0.6, 0.6, 0.6, 1.0 };
-   GLfloat mat_ambient[] = {1.0,1.0,1.0,1.0};
-   GLfloat mat_shininess[] = { 0.0 };
-   GLfloat light_position[] = { 0.0, 5.0, 5.0, 1.0 };
-   
-   glClearColor (0.0, 0.0, 0.0, 1.0);
-   glShadeModel (GL_SMOOTH);
-
-   glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
-   glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
-   glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
-   glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-	
-   t3dInit();
+void cargarBolas(){
    //Carga las texturas a las 16 bolas
    for(int i = 1;i<=16;i++){
 	   std::string nombre = "Texturas/Ball" + std::to_string(i) + ".tga";
@@ -84,7 +75,29 @@ void init(void)
    //pone la bola blanca en su lugar
    bola[15].setX(5);
    bola[15].setZ(0);
+}
 
+//inicializa la iluminacion
+void init(void) 
+{
+	srand(time(NULL));
+   //Luz ambiental
+   GLfloat mat_specular[] = { 0.6, 0.6, 0.6, 1.0 };
+   GLfloat mat_ambient[] = {1.0,1.0,1.0,1.0};
+   GLfloat mat_shininess[] = { 0.0 };
+   GLfloat light_position[] = { 0.0, 5.0, 5.0, 1.0 };
+   
+   glClearColor (0.0, 0.0, 0.0, 1.0);
+   glShadeModel (GL_SMOOTH);
+
+   glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+   glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+   glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
+   glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+	
+   t3dInit();
+	
+   cargarBolas();
 
    glEnable(GL_LIGHTING);
    glEnable(GL_LIGHT0);
@@ -99,7 +112,7 @@ double distancia(Bola bola1,Bola bola2){
 }
 
 velocidadesBolas velocidadColision(Bola bola1, Bola bola2){
-	printf("x1ini->%f\ty1ini->%f\nx2ini->%f\ty2ini->%f\n",bola1.getVelX(),bola1.getVelZ(),bola2.getVelX(),bola2.getVelZ());
+	//printf("x1ini->%f\ty1ini->%f\nx2ini->%f\ty2ini->%f\n",bola1.getVelX(),bola1.getVelZ(),bola2.getVelX(),bola2.getVelZ());
 	double anguloTheta, anguloPhi;
 	velocidadesBolas resultado;
 
@@ -119,13 +132,13 @@ velocidadesBolas velocidadColision(Bola bola1, Bola bola2){
 
 	double x = determinanteX / determinanteS;
 	double y = determinanteY / determinanteS;
-	printf("x->%f\ty->%f\n",x,y);
+	//printf("x->%f\ty->%f\n",x,y);
 	resultado.velXbol1 = x * matriz[0][0];
 	resultado.velZbol1 = y * matriz[1][0];
 	resultado.velXbol2 = x * matriz[0][1];
 	resultado.velZbol2 = y * matriz[1][1];
 
-	printf("x1fin->%f\ty1fin->%f\nx2fin->%f\ty2fin->%f\n\n\n",resultado.velXbol1,resultado.velZbol1,resultado.velXbol2,resultado.velZbol2);
+	//printf("x1fin->%f\ty1fin->%f\nx2fin->%f\ty2fin->%f\n\n\n",resultado.velXbol1,resultado.velZbol1,resultado.velXbol2,resultado.velZbol2);
 	return resultado;
 }
 
@@ -168,58 +181,157 @@ void colisionPared(int x){
 }
 void dibujaBolas(){
 	//Dibuja las bolas
-    double x = -4;
-    double z = 0;
-    int num = 0;
     for(int i = 0;i<16;i++){
-		glEnable(GL_TEXTURE_2D);
-    	bola[i].dibujar();
-		colisionPared(i);
-		glDisable(GL_TEXTURE_2D);
+		if(!ballIn[i]){
+			glEnable(GL_TEXTURE_2D);
+			if(fabs(bola[i].getZ())>5.5)
+				ballIn[i]=true;
+			if(fabs(bola[i].getX())>11.4)
+				ballIn[i]=true;
+			if(ballIn[i]){
+				if(i == 0 || i == 1 || i == 5 || i == 6 || i == 8 || i == 12 || i == 14)
+					lisaIn = true;
+				if(i == 2 || i == 3 || i == 7 || i == 9 || i == 10 || i == 11 || i == 13)
+					rayadaIn == true;
+				bola[i].setVelX(0);
+				bola[i].setVelZ(0);
+			}else{
+		    	bola[i].dibujar();
+				colisionPared(i);
+			}
+			glDisable(GL_TEXTURE_2D);
+		}
     }
 }
 
 void dibujaBolaScore(double x,double y,double z,int i){
-	glPushMatrix();
-		glEnable(GL_TEXTURE_2D);
-			glRotatef(-90,0,1,0);
-			glRotatef(25,0,0,1);
-			glTranslatef(x,y,z);
-			score[i].dibujar();		
-		glDisable(GL_TEXTURE_2D);
-	glPopMatrix();
+	if(ballIn[i]==false){
+		glPushMatrix();
+			glEnable(GL_TEXTURE_2D);
+				glRotatef(-90,0,1,0);
+				glRotatef(25,0,0,1);
+				glTranslatef(x,y,z);
+				score[i].dibujar();		
+			glDisable(GL_TEXTURE_2D);
+		glPopMatrix();
+	}
 
 }
 
 void dibujaScore(){
 	//Dibuja las bolas lisas que faltan por meter 
-	dibujaBolaScore( 4,17.5,3,0);
-	dibujaBolaScore( 4,16.8,3,1);
-	dibujaBolaScore( 4,16.1,3,5);
-	dibujaBolaScore( 4,15.4,3,6);
-	dibujaBolaScore( 4,14.7,3,8);
-	dibujaBolaScore( 4,14  ,3,12);
-	dibujaBolaScore( 4,13.3,3,14);
+	dibujaBolaScore( 4,17.5,3*lisas,0);
+	dibujaBolaScore( 4,16.8,3*lisas,1);
+	dibujaBolaScore( 4,16.1,3*lisas,5);
+	dibujaBolaScore( 4,15.4,3*lisas,6);
+	dibujaBolaScore( 4,14.7,3*lisas,8);
+	dibujaBolaScore( 4,14  ,3*lisas,12);
+	dibujaBolaScore( 4,13.3,3*lisas,14);
 							
 	//Dibuja las bolas rayadas que faltan por meter 
-	dibujaBolaScore( 4,17.5,-3,2);
-	dibujaBolaScore( 4,16.8,-3,3);
-	dibujaBolaScore( 4,16.1,-3,7);
-	dibujaBolaScore( 4,15.4,-3,9);
-	dibujaBolaScore( 4,14.7,-3,10);
-	dibujaBolaScore( 4,14  ,-3,11);
-	dibujaBolaScore( 4,13.3,-3,13);
+	dibujaBolaScore( 4,17.5,-3*lisas,2);
+	dibujaBolaScore( 4,16.8,-3*lisas,3);
+	dibujaBolaScore( 4,16.1,-3*lisas,7);
+	dibujaBolaScore( 4,15.4,-3*lisas,9);
+	dibujaBolaScore( 4,14.7,-3*lisas,10);
+	dibujaBolaScore( 4,14  ,-3*lisas,11);
+	dibujaBolaScore( 4,13.3,-3*lisas,13);
 
 }	
 
 void dibujaTaco(){
+	GLfloat mat[] = {201/255.0, 100/255.0,  50/255.0, 1.0f };
+	GLfloat no[] = {255/255.0, 255/255.0, 255/255.0, 1.0f };
+					
+	glMaterialfv(GL_FRONT, GL_AMBIENT, mat);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, mat);
+
 	glPushMatrix();
-		glTranslatef (bola[15].getX(), 0,bola[15].getZ()-15);
+
+		//setColor(150,104, 52);
+		glTranslatef (bola[15].getX(), -6,bola[15].getZ());
+		glRotatef(rot,0,-1,0);
+		glTranslatef (0, 0, 3.5+fuerza*15);
 		glScalef (.2,.2,4);
-		glRotatef(rot,0,0,1);
 		glutSolidSphere(1,20,20);
+		//setColor(0,0,0);
 	glPopMatrix();
+					
+	glMaterialfv(GL_FRONT, GL_AMBIENT, no);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, no);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, no);
+
 	glutPostRedisplay();
+}
+
+void calculaFuerza(){
+	if(right == 1 && status == 1){
+		dibujaTaco();
+		if(fuerza > Max_Fuerza)
+			tempFuerza = -.002;
+		else if(fuerza < .01)
+			tempFuerza = .002;
+
+		fuerza += tempFuerza;
+		t.setStrength(fuerza * (100/Max_Fuerza));//Se multiplica para que el valor que imprima sea de 0-100
+	}
+}
+
+void cambiaTurno(){
+	if(t.getTurn()==1)
+		t.setTurn(2);
+	else
+		t.setTurn(1);
+	status = 0;
+	t.setStrength(0);
+
+}
+
+void checaTurno(){
+	calculaFuerza();
+	if(right == 0 && status == 1){
+		bola[15].setVelX(sin(rot*PI/180)*fuerza);
+		bola[15].setVelZ(-cos(rot*PI/180)*fuerza);
+		fuerza = 0;
+		status = 2;
+	}
+	if(status == 2){
+		quietas = true;
+		for(int i = 0;i<16;i++){
+			if(bola[i].getVelX() != 0 || bola[i].getVelZ() !=0)
+				quietas = false;
+		}
+		if(quietas){
+			if(ballIn[15]){
+				bola[15].setX(0);	
+				bola[15].setZ(0);
+				ballIn[15]=false;	
+				cambiaTurno();
+			}else{
+				if(lisas == 10){
+					if(lisaIn && !rayadaIn)
+						lisas = 1;
+					else if (!lisaIn && rayadaIn)
+						lisas = -1;
+					else if(!lisaIn && !rayadaIn)
+						cambiaTurno();
+				}else{
+					if(lisas == 1){
+						if(!lisaIn)
+							cambiaTurno();
+					}else{
+						if(lisas == -1)
+							if(!rayadaIn)
+								cambiaTurno();
+					}
+				}
+			}
+			lisaIn=false;
+			rayadaIn=false;
+		}
+	}
+
 }
 
 //Se dibuja todo aqui
@@ -240,16 +352,10 @@ void display(void)
         bola[15].dibujar();
         //dibuja bolas
         dibujaBolas();
-		//printf("%f\n",rot);
-		//////////////7printf("%f\t%f\n",bola[15].getVelX(),bola[15].getVelZ());
- 
+		checaTurno();
 	glPopMatrix();
-	
+
 	dibujaScore();
-	//dibujaTaco();
-	
-
-
 	t.drawText();
  	
 	glutSwapBuffers();
@@ -274,8 +380,6 @@ void simulacion()
     glutPostRedisplay();
 }
 
-
-
 //Iteracción con el mouse
 void mouse(int button, int state, int x, int y)
 {
@@ -290,24 +394,24 @@ void mouse(int button, int state, int x, int y)
 		}
 	}
 	if (button == GLUT_RIGHT_BUTTON) {
-		//bola[15].setVelX(.01);
-		//bola[15].setVelZ(.01);
+		if(status==0)
+			status = 1;
+		if(state == GLUT_DOWN)
+			right = 1;
+		else
+			right = 0;
 		for(int i = 0;i<16;i++){
 			//bola[i].setVelX(-1*(double)rand()/(double)(RAND_MAX)*.2);
 			//bola[i].setVelZ((double)rand()/(double)(RAND_MAX)*.2);
 		}
-		if(t.getTurn()==1)
-			t.setTurn(2);	
-		else
-			t.setTurn(1);	
-			bola[15].setVelX(sin(rot*PI/180)*.21);
-			bola[15].setVelZ(-cos(rot*PI/180)*.21);
-			//bola[15].setVelZ(-sin(rot)*.1);
+	}else{
+		right = 0;
 	}
+
 }
 void mouse_move(int x, int y) {
     if(down) {
-		rot += (x - lastx)*0.3;
+		rot += ((x - lastx)*0.3);
 		lastx = x;
 	}
 }
@@ -316,25 +420,25 @@ void keyboard (unsigned char key, int x, int y)
 	switch (key) {
 		case 'a':
 		case 'A':
-			score[15].setX(score[15].getX()-.1);
+			bola[15].setX(bola[15].getX()-.1);
 			printf("%f\t%f\n",bola[15].getX(),bola[15].getZ());
 			printf("\t%f\t%f\n",bola[15].getVelX(),bola[15].getVelZ());
 			break;
 		case 'd':
 		case 'D':
-			score[15].setX(score[15].getX()+.1);
+			bola[15].setX(bola[15].getX()+.1);
 			printf("%f\t%f\n",bola[15].getX(),bola[15].getZ());
 			printf("\t%f\t%f\n",bola[15].getVelX(),bola[15].getVelZ());
 			break;
 		case 'w':
 		case 'W':
-			score[15].setZ(score[15].getZ()-.1);
+			bola[15].setZ(bola[15].getZ()-.1);
 			printf("%f\t%f\n",bola[15].getX(),bola[15].getZ());
 			printf("\t%f\t%f\n",bola[15].getVelX(),bola[15].getVelZ());
 			break;
 		case 's':
 		case 'S':
-			score[15].setZ(score[15].getZ()+.1);
+			bola[15].setZ(bola[15].getZ()+.1);
 			printf("%f\t%f\n",bola[15].getX(),bola[15].getZ());
 			printf("\t%f\t%f\n",bola[15].getVelX(),bola[15].getVelZ());
 			break;
