@@ -25,6 +25,8 @@ int lastx, lasty;
 int down = 0;
 int right = 0;
 
+bool colisiones[16][16];
+
 double rot = 0;
 
 typedef struct velocidadesBolas{
@@ -97,30 +99,33 @@ double distancia(Bola bola1,Bola bola2){
 }
 
 velocidadesBolas velocidadColision(Bola bola1, Bola bola2){
-
+	printf("x1ini->%f\ty1ini->%f\nx2ini->%f\ty2ini->%f\n",bola1.getVelX(),bola1.getVelZ(),bola2.getVelX(),bola2.getVelZ());
 	double anguloTheta, anguloPhi;
 	velocidadesBolas resultado;
 
 	anguloTheta = atan(fabs(bola1.getX() - bola2.getX()) / fabs(bola1.getZ() - bola2.getZ()));
 	anguloPhi = atan(fabs(bola1.getZ() - bola2.getZ()) / fabs(bola1.getX() - bola2.getX()));
-
+	//printf("T->%f\tP->%f\n",anguloTheta,anguloPhi);
 	double matriz[2][3] = {
 			{cos(anguloTheta), cos(anguloPhi), (bola1.getVelX() + bola2.getVelX())},
 			{sin(anguloTheta), sin(anguloPhi), (bola1.getVelZ() + bola2.getVelX())}
 	};
 
-	double determinanteS = (matriz[0][0] * matriz[1][1]) - (matriz[0][1] * matriz[1][0]);
+	double determinanteS = (matriz[0][0] * matriz[1][1]) - (matriz[0][1] * matriz[1][0]); 
 	double determinanteX = (matriz[0][2] * matriz[1][1]) - (matriz[1][2] * matriz[0][1]);
 	double determinanteY = (matriz[0][0] * matriz[1][2]) - (matriz[1][0] * matriz[0][2]);
+	
+	//printf("S->%f\ŧX->%f\tY->%f\n",determinanteS,determinanteX,determinanteY);
 
 	double x = determinanteX / determinanteS;
 	double y = determinanteY / determinanteS;
+	printf("x->%f\ty->%f\n",x,y);
+	resultado.velXbol1 = determinanteX * matriz[0][0];
+	resultado.velZbol1 = determinanteX * matriz[1][0];
+	resultado.velXbol2 = determinanteY * matriz[0][1];
+	resultado.velZbol2 = determinanteY * matriz[1][1];
 
-	resultado.velXbol1 = x * matriz[0][0];
-	resultado.velZbol1 = x * matriz[1][0];
-	resultado.velXbol2 = y * matriz[0][1];
-	resultado.velZbol2 = y * matriz[1][1];
-
+	printf("x1fin->%f\ty1fin->%f\nx2fin->%f\ty2fin->%f\n\n\n",resultado.velXbol1,resultado.velZbol1,resultado.velXbol2,resultado.velZbol2);
 	return resultado;
 }
 
@@ -128,18 +133,21 @@ void checaColision(){
 	for(int i = 0;i<15;i++){
 		for(int j = i+1;j<16;j++){
 			if(distancia(bola[i],bola[j]) <= .615){
-				if(!bola[i].colision[j]){
+				if(!colisiones[i][j]){
 					velocidadesBolas velocidades = velocidadColision(bola[i], bola[j]);
 					bola[i].setVelX(velocidades.velXbol1);
 					bola[i].setVelZ(velocidades.velZbol1);
 					bola[j].setVelX(velocidades.velXbol2);
 					bola[j].setVelZ(velocidades.velZbol2);
-					bola[i].colision[j]=true;
-					bola[j].colision[i]=true;
+					colisiones[i][j]=true;
+					colisiones[j][i]=true;
+					//bola[j].colision[i]=true;
 				}
 			}else{
-				bola[i].colision[j]=false;
-				bola[j].colision[i]=false;
+				colisiones[i][j]=false;
+				colisiones[j][i]=false;
+				//bola[i].colision[j]=false;
+				//bola[j].colision[i]=false;
 			}
 		}
 	}
@@ -164,38 +172,43 @@ void dibujaBolas(){
     double z = 0;
     int num = 0;
     for(int i = 0;i<16;i++){
+		glEnable(GL_TEXTURE_2D);
     	bola[i].dibujar();
 		colisionPared(i);
+		glDisable(GL_TEXTURE_2D);
     }
 }
 
-void dibujaBolaScore(int x,int y,int z,int i){
+void dibujaBolaScore(double x,double y,double z,int i){
 	glPushMatrix();
-		glRotatef(-90,0,1,0);
-		glTranslatef(x,y,z);
-		score[i].dibujar();
+		glEnable(GL_TEXTURE_2D);
+			glRotatef(-90,0,1,0);
+			glRotatef(25,0,0,1);
+			glTranslatef(x,y,z);
+			score[i].dibujar();		
+		glDisable(GL_TEXTURE_2D);
 	glPopMatrix();
 
 }
 
 void dibujaScore(){
 	//Dibuja las bolas lisas que faltan por meter 
-	dibujaBolaScore(-5,18,5,0);
-	dibujaBolaScore(-5,17,5,1);
-	dibujaBolaScore(-5,16,5,5);
-	dibujaBolaScore(-5,15,5,6);
-	dibujaBolaScore(-5,14,5,8);
-	dibujaBolaScore(-5,13,5,12);
-	dibujaBolaScore(-5,12,5,14);
-
+	dibujaBolaScore( 4,17.5,3,0);
+	dibujaBolaScore( 4,16.8,3,1);
+	dibujaBolaScore( 4,16.1,3,5);
+	dibujaBolaScore( 4,15.4,3,6);
+	dibujaBolaScore( 4,14.7,3,8);
+	dibujaBolaScore( 4,14  ,3,12);
+	dibujaBolaScore( 4,13.3,3,14);
+							
 	//Dibuja las bolas rayadas que faltan por meter 
-	dibujaBolaScore(-5,18,-5,2);
-	dibujaBolaScore(-5,17,-5,3);
-	dibujaBolaScore(-5,16,-5,7);
-	dibujaBolaScore(-5,15,-5,9);
-	dibujaBolaScore(-5,14,-5,10);
-	dibujaBolaScore(-5,13,-5,11);
-	dibujaBolaScore(-5,12,-5,13);
+	dibujaBolaScore( 4,17.5,-3,2);
+	dibujaBolaScore( 4,16.8,-3,3);
+	dibujaBolaScore( 4,16.1,-3,7);
+	dibujaBolaScore( 4,15.4,-3,9);
+	dibujaBolaScore( 4,14.7,-3,10);
+	dibujaBolaScore( 4,14  ,-3,11);
+	dibujaBolaScore( 4,13.3,-3,13);
 
 }	
 
@@ -280,8 +293,8 @@ void mouse(int button, int state, int x, int y)
 		//bola[15].setVelX(.01);
 		//bola[15].setVelZ(.01);
 		for(int i = 0;i<16;i++){
-			bola[i].setVelX(-1*(double)rand()/(double)(RAND_MAX)*.2);
-			bola[i].setVelZ((double)rand()/(double)(RAND_MAX)*.2);
+			//bola[i].setVelX(-1*(double)rand()/(double)(RAND_MAX)*.2);
+			//bola[i].setVelZ((double)rand()/(double)(RAND_MAX)*.2);
 		}
 		if(t.getTurn()==1)
 			t.setTurn(2);	
