@@ -120,10 +120,10 @@ velocidadesBolas velocidadColision(Bola bola1, Bola bola2){
 	double x = determinanteX / determinanteS;
 	double y = determinanteY / determinanteS;
 	printf("x->%f\ty->%f\n",x,y);
-	resultado.velXbol1 = determinanteX * matriz[0][0];
-	resultado.velZbol1 = determinanteX * matriz[1][0];
-	resultado.velXbol2 = determinanteY * matriz[0][1];
-	resultado.velZbol2 = determinanteY * matriz[1][1];
+	resultado.velXbol1 = x * matriz[0][0];
+	resultado.velZbol1 = y * matriz[1][0];
+	resultado.velXbol2 = x * matriz[0][1];
+	resultado.velZbol2 = y * matriz[1][1];
 
 	printf("x1fin->%f\ty1fin->%f\nx2fin->%f\ty2fin->%f\n\n\n",resultado.velXbol1,resultado.velZbol1,resultado.velXbol2,resultado.velZbol2);
 	return resultado;
