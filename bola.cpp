@@ -34,9 +34,33 @@ void Bola::setVelZ(double mz){
 	this->velZ = mz;
 }
 
+void Bola::desacelera(){
+	double desAcc = .0008;
+
+	if(velX != 0 || velZ != 0){
+		if(fabs(velX)>fabs(velZ)){
+			velZ-=velZ*desAcc/fabs(velX);
+			if(velX>0)
+				velX-=desAcc;
+			else
+				velX+=desAcc;
+		}else{
+			velX-=velX*desAcc/fabs(velZ);
+			if(velZ>0)
+				velZ-=desAcc;
+			else
+				velZ+=desAcc;
+		}
+		if(fabs(velX)<desAcc)
+			velX=0;
+		if(fabs(velZ)<desAcc)
+			velZ=0;
+	}
+}
+
 void Bola::dibujar(){
 	double r = .3075;
-	double desAcc = .0008;	
+
 	glPushMatrix();
 		x+=velX;
 		z+=velZ;
@@ -56,27 +80,9 @@ void Bola::dibujar(){
 		glBindTexture(GL_TEXTURE_2D, BallTexture.texID);
 	
 		glmDraw(pmodel2, GLM_SMOOTH | GLM_TEXTURE );
-
-		if(velX != 0 || velZ != 0){
-			if(fabs(velX)>fabs(velZ)){
-				velZ-=velZ*desAcc/fabs(velX);
-				if(velX>0)
-					velX-=desAcc;
-				else
-					velX+=desAcc;
-			}else{
-				velX-=velX*desAcc/fabs(velZ);
-				if(velZ>0)
-					velZ-=desAcc;
-				else
-					velZ+=desAcc;
-			}
-			if(fabs(velX)<desAcc)
-				velX=0;
-			if(fabs(velZ)<desAcc)
-				velZ=0;
-
-		}
+		
+		desacelera();
+		
 	glPopMatrix();
 }
 

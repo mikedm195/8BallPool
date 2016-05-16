@@ -21,6 +21,7 @@ class Bola{
 		double x,z;
 		double velX;
 		double velZ;
+		void desacelera();
 	public:
 		GLMmodel* pmodel2 = NULL;
         Bola();

@@ -67,7 +67,7 @@ void cargarBolas(){
         for(int j = 0;j<=i;j++){
             bola[num].setX(x);
             bola[num++].setZ(z);
-            z-=.615;
+            z-=.616;
         }
         x-=.615;
    }
@@ -112,16 +112,16 @@ double distancia(Bola bola1,Bola bola2){
 }
 
 velocidadesBolas velocidadColision(Bola bola1, Bola bola2){
-	//printf("x1ini->%f\ty1ini->%f\nx2ini->%f\ty2ini->%f\n",bola1.getVelX(),bola1.getVelZ(),bola2.getVelX(),bola2.getVelZ());
+	printf("x1ini->%f\ty1ini->%f\nx2ini->%f\ty2ini->%f\n",bola1.getVelX(),bola1.getVelZ(),bola2.getVelX(),bola2.getVelZ());
 	double anguloTheta, anguloPhi;
 	velocidadesBolas resultado;
 
-	anguloTheta = atan(fabs(bola1.getX() - bola2.getX()) / fabs(bola1.getZ() - bola2.getZ()));
-	anguloPhi = atan(fabs(bola1.getZ() - bola2.getZ()) / fabs(bola1.getX() - bola2.getX()));
-	//printf("T->%f\tP->%f\n",anguloTheta,anguloPhi);
+	anguloTheta = atan((bola1.getX() - bola2.getX()) / (bola1.getZ() - bola2.getZ()));
+	anguloPhi = atan((bola1.getZ() - bola2.getZ()) / (bola1.getX() - bola2.getX()));
+	//printf("T->%f\tP->%f\n",anguloTheta*180/PI,anguloPhi*180/PI);
 	double matriz[2][3] = {
-			{cos(anguloTheta), cos(anguloPhi), (bola1.getVelX() + bola2.getVelX())},
-			{sin(anguloTheta), sin(anguloPhi), (bola1.getVelZ() + bola2.getVelX())}
+			{cos(anguloTheta), cos(anguloPhi), ((bola1.getVelX()*cos(anguloTheta)) + (bola2.getVelX()*cos(anguloPhi)))},
+			{sin(anguloTheta), sin(anguloPhi), ((bola1.getVelZ()*sin(anguloTheta)) + (bola2.getVelX()*sin(anguloPhi)))}
 	};
 
 	double determinanteS = (matriz[0][0] * matriz[1][1]) - (matriz[0][1] * matriz[1][0]); 
@@ -138,8 +138,13 @@ velocidadesBolas velocidadColision(Bola bola1, Bola bola2){
 	resultado.velXbol2 = x * matriz[0][1];
 	resultado.velZbol2 = y * matriz[1][1];
 
-	//printf("x1fin->%f\ty1fin->%f\nx2fin->%f\ty2fin->%f\n\n\n",resultado.velXbol1,resultado.velZbol1,resultado.velXbol2,resultado.velZbol2);
+	printf("x1fin->%f\ty1fin->%f\nx2fin->%f\ty2fin->%f\n\n\n",resultado.velXbol1,resultado.velZbol1,resultado.velXbol2,resultado.velZbol2);
 	return resultado;
+}
+
+void velFin(Bola bola1,Bola bola2){
+	double ang = asin(fabs(bola1.getZ()-bola2.getZ())/distancia(bola1,bola2));
+	printf("%f\t%f\t%f\n",fabs(bola1.getZ()-bola2.getZ()),distancia(bola1,bola2),ang*(180/PI));
 }
 
 void checaColision(){
@@ -148,6 +153,8 @@ void checaColision(){
 			if(distancia(bola[i],bola[j]) <= .615){//si la distancia de las bolas es menor a su diametro es que esta chocando
 				if(!colisiones[i][j]){
 					velocidadesBolas velocidades = velocidadColision(bola[i], bola[j]);
+					//printf("%d %d\n",i,j);
+					//velFin(bola[i],bola[j]);
 					bola[i].setVelX(velocidades.velXbol1);
 					bola[i].setVelZ(velocidades.velZbol1);
 					bola[j].setVelX(velocidades.velXbol2);
@@ -184,12 +191,8 @@ void dibujaBolas(){
 		if(!ballIn[i]){
 			glEnable(GL_TEXTURE_2D);
 			//checa si la bola entro en algun lado
-			if(fabs(bola[i].getZ())>5.5)
+			if(fabs(bola[i].getZ())>5.4||fabs(bola[i].getX())>11.4){
 				ballIn[i]=true;
-			if(fabs(bola[i].getX())>11.4)
-				ballIn[i]=true;
-			//checa si la bola que metieron era lisa o rayada
-			if(ballIn[i]){
 				if(i == 0 || i == 1 || i == 5 || i == 6 || i == 8 || i == 12 || i == 14)
 					lisaIn = true;
 				if(i == 2 || i == 3 || i == 7 || i == 9 || i == 10 || i == 11 || i == 13)
@@ -197,7 +200,9 @@ void dibujaBolas(){
 				//le quita la velocidad a las bolas
 				bola[i].setVelX(0);
 				bola[i].setVelZ(0);
-			}else{
+			}
+			//checa si la bola que metieron era lisa o rayada
+			if(!ballIn[i]){
 		    	bola[i].dibujar();//dibuja la bola
 				colisionPared(i);//checa colisiones
 			}
@@ -377,9 +382,12 @@ void checaTurno(){
 	if(status == 2){
 		quietas = true;
 		for(int i = 0;i<16;i++){
-			if(bola[i].getVelX() != 0 || bola[i].getVelZ() !=0)
-				quietas = false;//checa si las bolas siguen en movimiento
+			if(bola[i].getVelX() != 0 || bola[i].getVelZ() !=0){
+				if(!ballIn[i])
+					quietas = false;//checa si las bolas siguen en movimiento
+			}
 		}
+
 		if(quietas){
 			cambiar = checaNegra();//Ve si metieron la bola negra
 			if(cambiar){
