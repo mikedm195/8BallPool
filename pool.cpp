@@ -286,6 +286,12 @@ void calculaFuerza(){
 	}
 }
 
+//Resetea las colisiones 
+void resetCollisions(){
+	for(int i = 0;i<16;i++)
+		for(int j = 0;j<16;j++)
+			colisiones[i][j]=false;
+}
 //cambia de turno
 void cambiaTurno(){
 	if(t.getTurn()==1)
@@ -294,7 +300,7 @@ void cambiaTurno(){
 		t.setTurn(1);
 	status = 0;
 	t.setStrength(0);
-
+	resetCollisions();
 }
 
 bool continuar(){
