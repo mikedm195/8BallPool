@@ -46,8 +46,7 @@ typedef struct velocidadesBolas{
 };
 
 void cargarBolas(){
-   //Carga las texturas a las 16 bolas
-   for(int i = 1;i<=16;i++){
+   for(int i = 1;i<=16;i++){//Carga las texturas a las 16 bolas
 	   std::string nombre = "Texturas/Ball" + std::to_string(i) + ".tga";
 	   char *cstr = new char[nombre.length() + 1];
 	   strcpy(cstr, nombre.c_str());
@@ -95,9 +94,9 @@ void init(void)
    glMaterialfv(GL_FRONT, GL_AMBIENT, mat_ambient);
    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
 	
-   t3dInit();
+   t3dInit();//carga texto 3d
 	
-   cargarBolas();
+   cargarBolas();//carga las bolas
 
    glEnable(GL_LIGHTING);
    glEnable(GL_LIGHT0);
@@ -105,6 +104,7 @@ void init(void)
 
 }
 
+//calcula la distancia entre dos bolas
 double distancia(Bola bola1,Bola bola2){
 	double disX = fabs(bola1.getX() - bola2.getX());
 	double disZ = fabs(bola1.getZ() - bola2.getZ());
@@ -145,30 +145,29 @@ velocidadesBolas velocidadColision(Bola bola1, Bola bola2){
 void checaColision(){
 	for(int i = 0;i<15;i++){
 		for(int j = i+1;j<16;j++){
-			if(distancia(bola[i],bola[j]) <= .615){
+			if(distancia(bola[i],bola[j]) <= .615){//si la distancia de las bolas es menor a su diametro es que esta chocando
 				if(!colisiones[i][j]){
 					velocidadesBolas velocidades = velocidadColision(bola[i], bola[j]);
 					bola[i].setVelX(velocidades.velXbol1);
 					bola[i].setVelZ(velocidades.velZbol1);
 					bola[j].setVelX(velocidades.velXbol2);
 					bola[j].setVelZ(velocidades.velZbol2);
+					//evita que se detecte una colision dos veces
 					colisiones[i][j]=true;
 					colisiones[j][i]=true;
-					//bola[j].colision[i]=true;
 				}
 			}else{
 				colisiones[i][j]=false;
 				colisiones[j][i]=false;
-				//bola[i].colision[j]=false;
-				//bola[j].colision[i]=false;
 			}
 		}
 	}
 }
 
 void colisionPared(int x){
-	double d = .615;
+	double d = .615;//diametro de la bola
 	double r = .7075;
+	//checa colisiones con las 4 paredes
 	if(bola[x].getX()>11-d && (bola[x].getZ()<4.5 && bola[x].getZ() > -4.5))
 		bola[x].setVelX(-fabs(bola[x].getVelX()));
 	if(bola[x].getX()<-11+d && (bola[x].getZ()<4.5 && bola[x].getZ() > -4.5))
@@ -184,28 +183,32 @@ void dibujaBolas(){
     for(int i = 0;i<16;i++){
 		if(!ballIn[i]){
 			glEnable(GL_TEXTURE_2D);
+			//checa si la bola entro en algun lado
 			if(fabs(bola[i].getZ())>5.5)
 				ballIn[i]=true;
 			if(fabs(bola[i].getX())>11.4)
 				ballIn[i]=true;
+			//checa si la bola que metieron era lisa o rayada
 			if(ballIn[i]){
 				if(i == 0 || i == 1 || i == 5 || i == 6 || i == 8 || i == 12 || i == 14)
 					lisaIn = true;
 				if(i == 2 || i == 3 || i == 7 || i == 9 || i == 10 || i == 11 || i == 13)
 					rayadaIn == true;
+				//le quita la velocidad a las bolas
 				bola[i].setVelX(0);
 				bola[i].setVelZ(0);
 			}else{
-		    	bola[i].dibujar();
-				colisionPared(i);
+		    	bola[i].dibujar();//dibuja la bola
+				colisionPared(i);//checa colisiones
 			}
 			glDisable(GL_TEXTURE_2D);
 		}
     }
 }
 
+//dibuja las bolsa para ver cuales faltan
 void dibujaBolaScore(double x,double y,double z,int i){
-	if(ballIn[i]==false){
+	if(ballIn[i]==false){//si todavia no la meten
 		glPushMatrix();
 			glEnable(GL_TEXTURE_2D);
 				glRotatef(-90,0,1,0);
@@ -239,25 +242,24 @@ void dibujaScore(){
 
 }	
 
+//dibuja el taco
 void dibujaTaco(){
 	GLfloat mat[] = {201/255.0, 100/255.0,  50/255.0, 1.0f };
 	GLfloat no[] = {255/255.0, 255/255.0, 255/255.0, 1.0f };
-					
+	//dibuja el taco cafe
 	glMaterialfv(GL_FRONT, GL_AMBIENT, mat);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, mat);
 
 	glPushMatrix();
-
-		//setColor(150,104, 52);
-		glTranslatef (bola[15].getX(), -6,bola[15].getZ());
-		glRotatef(rot,0,-1,0);
-		glTranslatef (0, 0, 3.5+fuerza*15);
+		glTranslatef (bola[15].getX(), -6,bola[15].getZ());//traslada el taco hacia la bola blanca
+		glRotatef(rot,0,-1,0);//rota el taco al mismo angulo de la camara
+		glTranslatef (0, 0, 3.5+fuerza*15);//mueve el taco atras de la bola blanca
 		glScalef (.2,.2,4);
 		glutSolidSphere(1,20,20);
-		//setColor(0,0,0);
 	glPopMatrix();
 					
+	//cambia color a blanco para que no pinte toda la escena de cafe
 	glMaterialfv(GL_FRONT, GL_AMBIENT, no);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, no);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, no);
@@ -265,6 +267,7 @@ void dibujaTaco(){
 	glutPostRedisplay();
 }
 
+//calcula la fuerza de la bola
 void calculaFuerza(){
 	if(right == 1 && status == 1){
 		dibujaTaco();
@@ -278,6 +281,7 @@ void calculaFuerza(){
 	}
 }
 
+//cambia de turno
 void cambiaTurno(){
 	if(t.getTurn()==1)
 		t.setTurn(2);
@@ -288,9 +292,83 @@ void cambiaTurno(){
 
 }
 
+bool continuar(){
+	bool c = false;
+	if(lisas == 10){//si aun no se ha metido ninguna bola
+		if(lisaIn && !rayadaIn){//si se mete bola blanca
+			if(t.getTurn()==1)
+				lisas = 1;
+			else
+				lisas = -1;
+		}else{
+			if (!lisaIn && rayadaIn){//si se mete bola rayada
+				if(t.getTurn()==1)
+					lisas = -1;
+				else
+					lisas = 1;
+			}
+		}
+	}else{
+		if(lisas == 1){//checa si un jugador no metio alguna de las bolas que le tocaba
+			if((!lisaIn && t.getTurn()==1)||(!rayadaIn && t.getTurn()==2))
+				c = true;
+		}else{
+			if(lisas == -1)
+				if((!rayadaIn && t.getTurn() == 1)||(!lisaIn && t.getTurn()==2))
+					c = true;
+		}
+	}
+	if(!lisaIn && !rayadaIn)
+		c = true;
+	return c;
+}
+
+//checa si metieron la bola blanca
+bool checaBlanca(){
+	if(ballIn[15]){
+		bola[15].setX(0);	
+		bola[15].setZ(0);
+		ballIn[15]=false;	
+		return true;
+	}
+	return false;
+}
+
+bool acabo(){
+	bool a = false;
+	int temp = t.getTurn();//checa si ya se metieron las bolas que le tocan al jugador
+	if((temp == 1 && lisas == 1)||(temp=2 && lisas == -1)){
+		if(ballIn[0] && ballIn[1] &&ballIn[5] &&ballIn[6] &&ballIn[8] &&ballIn[12] &&ballIn[14]){
+			a = true;
+		}
+	}else{
+		if(ballIn[2] && ballIn[3] &&ballIn[7] &&ballIn[9] &&ballIn[10] &&ballIn[11] &&ballIn[13]){
+			a = true;	
+		}
+	}
+	return a;
+}
+
+bool checaNegra(){
+	if(ballIn[4]){
+		if(acabo()){
+			t.setWinner(t.getTurn());//si el jugador ya metio todas las bolas que le tocaban gana
+		}else{
+			int temp = t.getTurn();//si todavia no acababa gana el contrario
+			if(temp==1)
+				t.setWinner(2);
+			else
+				t.setWinner(1);
+		}
+		return false;
+	}
+	return true;
+}
+
 void checaTurno(){
 	calculaFuerza();
-	if(right == 0 && status == 1){
+	bool cambiar;
+	if(right == 0 && status == 1){//asigna la fuerza a la bola blanca cuando ya le pegaron
 		bola[15].setVelX(sin(rot*PI/180)*fuerza);
 		bola[15].setVelZ(-cos(rot*PI/180)*fuerza);
 		fuerza = 0;
@@ -300,38 +378,22 @@ void checaTurno(){
 		quietas = true;
 		for(int i = 0;i<16;i++){
 			if(bola[i].getVelX() != 0 || bola[i].getVelZ() !=0)
-				quietas = false;
+				quietas = false;//checa si las bolas siguen en movimiento
 		}
 		if(quietas){
-			if(ballIn[15]){
-				bola[15].setX(0);	
-				bola[15].setZ(0);
-				ballIn[15]=false;	
-				cambiaTurno();
-			}else{
-				if(lisas == 10){
-					if(lisaIn && !rayadaIn)
-						lisas = 1;
-					else if (!lisaIn && rayadaIn)
-						lisas = -1;
-					else if(!lisaIn && !rayadaIn)
-						cambiaTurno();
-				}else{
-					if(lisas == 1){
-						if(!lisaIn)
-							cambiaTurno();
-					}else{
-						if(lisas == -1)
-							if(!rayadaIn)
-								cambiaTurno();
-					}
-				}
+			cambiar = checaNegra();//Ve si metieron la bola negra
+			if(cambiar){
+				cambiar = checaBlanca();//Ve si metieron la bola blanca
+				if(!cambiar)
+					cambiar = continuar();//checa si mete alguna de las bolas que le toca al jugador en turno
 			}
 			lisaIn=false;
 			rayadaIn=false;
+			status = 0;
+			if(cambiar)
+				cambiaTurno();//Cambia de turno
 		}
 	}
-
 }
 
 //Se dibuja todo aqui
@@ -352,10 +414,12 @@ void display(void)
         bola[15].dibujar();
         //dibuja bolas
         dibujaBolas();
+		//checa de quien es el turno
 		checaTurno();
 	glPopMatrix();
-
+	//dibuja el score
 	dibujaScore();
+	//dibuja el texto 3d
 	t.drawText();
  	
 	glutSwapBuffers();
@@ -383,7 +447,7 @@ void simulacion()
 //Iteracción con el mouse
 void mouse(int button, int state, int x, int y)
 {
-
+	//gira la camara
 	if (button == GLUT_LEFT_BUTTON) {
 		if (state == GLUT_DOWN) {
 			lastx = x;
@@ -393,6 +457,7 @@ void mouse(int button, int state, int x, int y)
 			down = 0;
 		}
 	}
+	//para tirar
 	if (button == GLUT_RIGHT_BUTTON) {
 		if(status==0)
 			status = 1;
@@ -409,6 +474,7 @@ void mouse(int button, int state, int x, int y)
 	}
 
 }
+//mueve la camara
 void mouse_move(int x, int y) {
     if(down) {
 		rot += ((x - lastx)*0.3);
@@ -441,6 +507,15 @@ void keyboard (unsigned char key, int x, int y)
 			bola[15].setZ(bola[15].getZ()+.1);
 			printf("%f\t%f\n",bola[15].getX(),bola[15].getZ());
 			printf("\t%f\t%f\n",bola[15].getVelX(),bola[15].getVelZ());
+			break;
+		case 'z':
+			lisaIn=true;
+			break;
+		case 'x':
+			rayadaIn=true;
+			break;
+		case 'c':
+			ballIn[4]=true;
 			break;
       case 27:
          exit(0);
