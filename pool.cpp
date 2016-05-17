@@ -112,7 +112,7 @@ double distancia(Bola bola1,Bola bola2){
 }
 
 velocidadesBolas velocidadColision(Bola bola1, Bola bola2){
-	printf("x1ini->%f\ty1ini->%f\nx2ini->%f\ty2ini->%f\n",bola1.getVelX(),bola1.getVelZ(),bola2.getVelX(),bola2.getVelZ());
+	//printf("x1ini->%f\ty1ini->%f\nx2ini->%f\ty2ini->%f\n",bola1.getVelX(),bola1.getVelZ(),bola2.getVelX(),bola2.getVelZ());
 	double anguloTheta, anguloPhi;
 	velocidadesBolas resultado;
 
@@ -120,8 +120,8 @@ velocidadesBolas velocidadColision(Bola bola1, Bola bola2){
 	anguloPhi = atan((bola1.getZ() - bola2.getZ()) / (bola1.getX() - bola2.getX()));
 	//printf("T->%f\tP->%f\n",anguloTheta*180/PI,anguloPhi*180/PI);
 	double matriz[2][3] = {
-			{cos(anguloTheta), cos(anguloPhi), ((bola1.getVelX()*cos(anguloTheta)) + (bola2.getVelX()*cos(anguloPhi)))},
-			{sin(anguloTheta), sin(anguloPhi), ((bola1.getVelZ()*sin(anguloTheta)) + (bola2.getVelX()*sin(anguloPhi)))}
+			{cos(anguloTheta), cos(anguloPhi), bola1.getVelX() + bola2.getVelX()},
+			{sin(anguloTheta), sin(anguloPhi), bola1.getVelZ() + bola2.getVelX()}
 	};
 
 	double determinanteS = (matriz[0][0] * matriz[1][1]) - (matriz[0][1] * matriz[1][0]); 
@@ -137,8 +137,16 @@ velocidadesBolas velocidadColision(Bola bola1, Bola bola2){
 	resultado.velZbol1 = y * matriz[1][0];
 	resultado.velXbol2 = x * matriz[0][1];
 	resultado.velZbol2 = y * matriz[1][1];
+	if(resultado.velXbol1>.21)
+		resultado.velXbol1 = .17;
+	if(resultado.velZbol1>.21)
+		resultado.velZbol1 = .17;
+	if(resultado.velXbol2>.21)
+		resultado.velXbol2 = .17;
+	if(resultado.velZbol2>.21)
+		resultado.velZbol2 = .17;
 
-	printf("x1fin->%f\ty1fin->%f\nx2fin->%f\ty2fin->%f\n\n\n",resultado.velXbol1,resultado.velZbol1,resultado.velXbol2,resultado.velZbol2);
+	//printf("x1fin->%f\ty1fin->%f\nx2fin->%f\ty2fin->%f\n\n\n",resultado.velXbol1,resultado.velZbol1,resultado.velXbol2,resultado.velZbol2);
 	return resultado;
 }
 
